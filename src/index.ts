@@ -115,10 +115,14 @@ app.get('/api/v1/contents',userAuthMiddleware, async(req,res): Promise<void> =>{
     //@ts-ignore
     const userId = req.userId;
     try {
-        const response = await contentModel.find({userId}).populate([
-            {path: 'userId', select: 'username'},
-            {path:'tags.tag', select: 'tag'}
-        ]);
+        const response = await contentModel.find({userId}).populate(
+            [{
+                path:'tags',
+                populate:{
+                    path: 'tag',
+                    select: 'tag'
+                }
+            },{path:'userId', select: 'username'}]);
         if(!response){
             res.status(404).json({message:'user does not exist'});
             return;
