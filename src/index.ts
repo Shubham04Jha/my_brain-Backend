@@ -67,7 +67,9 @@ app.post('/api/v1/signin',async(req, res): Promise<void> =>{
 })
 
 app.post('/api/v1/contents',userAuthMiddleware, async(req,res): Promise<void> =>{
-    const {userId,title,link,tags,thoughts,type} = req.body;
+    //@ts-ignore
+    const userId = req.userId;
+    const {title,link,tags,thoughts,type} = req.body;
     try {
         tags?await contentModel.create({title,type,link,thoughts,tags, userId}):await contentModel.create({
             title,
