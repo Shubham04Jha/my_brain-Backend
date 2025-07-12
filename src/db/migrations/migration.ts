@@ -19,10 +19,10 @@ mongoose.connect(DB_Url).then(()=>{
 
 const migration = async(): Promise<void> =>{
     try {
-        await contentModel.updateMany(
-            {isPublic: {$exists:false}},
-            {$set: {isPublic:false}}
-        )
+        contentModel.updateMany(
+            {isPublic: {$exists:true}},
+            {$set: {isPublic:true}}
+        ).exec();
         console.log('migration complete');
     } catch (error) {
         errorHandler(error,"migration");
