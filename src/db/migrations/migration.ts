@@ -17,16 +17,25 @@ mongoose.connect(DB_Url).then(()=>{
 })
 
 
-const migration = async(): Promise<void> =>{
+const isPublicMigration = async(): Promise<void> =>{
     try {
-        contentModel.updateMany(
+        await contentModel.updateMany(
             {isPublic: {$exists:true}},
             {$set: {isPublic:true}}
-        ).exec();
+        )
         console.log('migration complete');
     } catch (error) {
+        errorHandler(error,"isPublicMigration");
+    }
+}
+const migration = async(): Promise<void> =>{
+    try{
+        contentModel.updateMany(
+            {createdAt: {$exists: false}},
+            {$set: {createdAt: Date.now()}}
+        ).exec();
+    }catch(error){
         errorHandler(error,"migration");
     }
 }
-
 migration();

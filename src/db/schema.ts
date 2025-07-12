@@ -25,7 +25,8 @@ const contentSchema = new Schema({
   title: {type: String, required: true},
   tags: [{type: Schema.Types.ObjectId, ref: 'tag'}],
   userId: {type: Schema.Types.ObjectId, ref: 'user',required: true },
-  isPublic:{type:Boolean, default: false,required:true},
+  isPublic:{type:Boolean, default: false, required: true},
+  createdAt: {type: Date, default: Date.now(), required: true}
 })
 
 export const contentModel = model('content', contentSchema,'contents');
