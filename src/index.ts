@@ -1,15 +1,43 @@
 
 import express from 'express';
+import type { Request,Response } from 'express';
 import {port, JWT_SECRET} from './config.ts';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-import {userModel, contentModel } from './db/schema.ts';
+import {userModel, contentModel, tagModel } from './db/schema.ts';
 import { userAuthMiddleware } from './middleware/userAuth.ts';
 import { MongooseError } from 'mongoose';
+import {MongoServerError} from 'mongodb';
+
 
 const app = express();
 
 app.use(express.json())
+
+const errorHandler = (req: Request, res: Response, error: unknown, action: string): void=>{
+    if(error instanceof MongoServerError){
+        console.log('mongoDB error occured');
+        console.error('MongoDB Error:', error.message);
+        if (error.code === 11000) { // 11000 is the code for duplicate key error
+            res.status(409).json({ message: 'Entry already exists!' }); // 409 Conflict is a good status for duplicates
+        } else {
+            res.status(500).json({ message: 'Database error: ' + error.message });
+        }
+    }else if(error instanceof MongooseError){
+        console.log('Mongoose error occured');
+        console.error('Mongoose Error:', error.message);
+        res.status(400).json({ message: 'Data validation error: ' + error.message }); 
+    }else if(error instanceof Error){
+        console.log('General error occured');
+        console.error(error.message);
+        res.status(500).json({message:'unknown error'});
+    }else{
+        console.error(`Truly unknown error while ${action}:`, error);
+        res.status(500).json({ message: 'An unexpected internal server error occurred!' });
+    }
+    console.error(error);
+    return;
+}
 
 app.post('/api/v1/signup',async (req, res):Promise<void>=>{
     const {username,password} = req.body;
@@ -27,10 +55,8 @@ app.post('/api/v1/signup',async (req, res):Promise<void>=>{
         await userModel.create({username,password: hashed_password});
         res.status(200).json({message:'User successfully signed up'});
         return;
-    }catch(error){
-        console.error(error);
-        res.status(500).json({message:'Server Error'});
-        return;
+    } catch (error: unknown) {
+        errorHandler(req,res,error,"signing up");
     }
 })
 
@@ -78,17 +104,11 @@ app.post('/api/v1/contents',userAuthMiddleware, async(req,res): Promise<void> =>
             thoughts, 
             userId
         });
+        res.status(200).json({message: 'Contents uploaded successfully'})
+        return;
     } catch (error) {
-        if(error instanceof MongooseError){
-            res.status(500).json({message: error.message});
-            return;
-        }else{
-            res.status(500).json({message:'unexpected internal server error while posting contents!'});
-            return;
-        }
+        errorHandler(req,res,error,"posting contents");
     }
-    res.status(200).json({message: 'Contents uploaded successfully'})
-    return;
 })
 
 app.get('/api/v1/contents',userAuthMiddleware, async(req,res): Promise<void> =>{
@@ -97,7 +117,7 @@ app.get('/api/v1/contents',userAuthMiddleware, async(req,res): Promise<void> =>{
     try {
         const response = await contentModel.find({userId}).populate([
             {path: 'userId', select: 'username'},
-            {path:'tags', select: 'tag'}
+            {path:'tags.tag', select: 'tag'}
         ]);
         if(!response){
             res.status(404).json({message:'user does not exist'});
@@ -106,16 +126,22 @@ app.get('/api/v1/contents',userAuthMiddleware, async(req,res): Promise<void> =>{
         res.status(200).json({message: 'Contents delivered successfully',contents: response});
         return;
     } catch (error) {
-        if(error instanceof MongooseError){
-            res.status(500).json({message: error.message});
-            return;
-        }else{
-            res.status(500).json({message:'unexpected internal server error while posting contents!'});
-            return;
-        }
+        errorHandler(req,res,error,"fetching contents");
     }
 })
 
+app.post('/api/v1/tag',userAuthMiddleware,async(req,res): Promise<void>=>{
+    //@ts-ignore
+    const userId = req.userId;
+    const tag = req.body.tag;
+    try {
+        const response = await tagModel.create({tag});
+        res.status(200).json({message:'Successfully created the tag',tagId: response._id});
+        return;
+    } catch (error: unknown) {
+        errorHandler(req,res,error,"creating tag");
+    }
+})
 
 app.get('/',(req, res)=>{
     res.send('hello from ts');
