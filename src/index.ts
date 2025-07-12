@@ -1,43 +1,16 @@
 
 import express from 'express';
-import { MongooseError } from 'mongoose';
-import {MongoServerError} from 'mongodb';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-import type { Request,Response } from 'express';
 
 import {port, JWT_SECRET} from './config.ts';
 import {userModel, contentModel, tagModel } from './db/schema.ts';
 import { userAuthMiddleware } from './middleware/userAuth.ts';
+import { errorHandler } from './utils/errorHandler.ts';
 
 const app = express();
 
-app.use(express.json())
-
-const errorHandler = (req: Request, res: Response, error: unknown, action: string): void=>{
-    if(error instanceof MongoServerError){
-        console.log('mongoDB error occured');
-        console.error('MongoDB Error:', error.message);
-        if (error.code === 11000) { // 11000 is the code for duplicate key error
-            res.status(409).json({ message: 'Entry already exists!' }); // 409 Conflict is a good status for duplicates
-        } else {
-            res.status(500).json({ message: 'Database error: ' + error.message });
-        }
-    }else if(error instanceof MongooseError){
-        console.log('Mongoose error occured');
-        console.error('Mongoose Error:', error.message);
-        res.status(400).json({ message: 'Data validation error: ' + error.message }); 
-    }else if(error instanceof Error){
-        console.log('General error occured');
-        console.error(error.message);
-        res.status(500).json({message:'unknown error'});
-    }else{
-        console.error(`Truly unknown error while ${action}:`, error);
-        res.status(500).json({ message: 'An unexpected internal server error occurred!' });
-    }
-    console.error(error);
-    return;
-}
+app.use(express.json());
 
 app.post('/api/v1/signup',async (req, res):Promise<void>=>{
     const {username,password} = req.body;
@@ -56,7 +29,7 @@ app.post('/api/v1/signup',async (req, res):Promise<void>=>{
         res.status(200).json({message:'User successfully signed up'});
         return;
     } catch (error: unknown) {
-        errorHandler(req,res,error,"signing up");
+        errorHandler(error,"signing up",req,res);
     }
 })
 
@@ -107,7 +80,7 @@ app.post('/api/v1/content',userAuthMiddleware, async(req,res): Promise<void> =>{
         res.status(200).json({message: 'Contents uploaded successfully'})
         return;
     } catch (error) {
-        errorHandler(req,res,error,"posting contents");
+        errorHandler(error,"posting contents",req,res);
     }
 })
 
@@ -130,7 +103,7 @@ app.get('/api/v1/content',userAuthMiddleware, async(req,res): Promise<void> =>{
         res.status(200).json({message: 'Contents delivered successfully',contents: response});
         return;
     } catch (error) {
-        errorHandler(req,res,error,"fetching contents");
+        errorHandler(error,"fetching contents",req,res);
     }
 })
 
@@ -143,7 +116,7 @@ app.post('/api/v1/tag',userAuthMiddleware,async(req,res): Promise<void>=>{
         res.status(200).json({message:'Successfully created the tag',tagId: response._id});
         return;
     } catch (error: unknown) {
-        errorHandler(req,res,error,"creating tag");
+        errorHandler(error,"creating tag",req,res);
     }
 })
 
@@ -165,7 +138,7 @@ app.delete('/api/v1/content',userAuthMiddleware, async(req,res): Promise<void>=>
         res.status(200).json({message:'Content Deleted'});
         return;
     } catch (error) {
-        errorHandler(req,res,error,'deleting content');
+        errorHandler(error,'deleting content',req,res);
     }
 })
 
