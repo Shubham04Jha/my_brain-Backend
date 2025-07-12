@@ -67,9 +67,15 @@ app.post('/api/v1/signin',async(req, res): Promise<void> =>{
 })
 
 app.post('/api/v1/contents',userAuthMiddleware, async(req,res): Promise<void> =>{
-    const {userId,title,link,tags,thoughts} = req.body;
+    const {userId,title,link,tags,thoughts,type} = req.body;
     try {
-        await contentModel.create({title,link,thoughts,tags, userId});
+        tags?await contentModel.create({title,type,link,thoughts,tags, userId}):await contentModel.create({
+            title,
+            type,
+            link,
+            thoughts, 
+            userId
+        });
     } catch (error) {
         if(error instanceof MongooseError){
             res.status(500).json({message: error.message});
@@ -84,17 +90,17 @@ app.post('/api/v1/contents',userAuthMiddleware, async(req,res): Promise<void> =>
 })
 
 app.get('/api/v1/contents',userAuthMiddleware, async(req,res): Promise<void> =>{
-    const userId = req.body.userId;
+    //@ts-ignore
+    const userId = req.userId;
     try {
         const response = await contentModel.find({userId}).populate([
-            {path: 'user', select: 'username'},
+            {path: 'userId', select: 'username'},
             {path:'tags', select: 'tag'}
         ]);
         if(!response){
             res.status(404).json({message:'user does not exist'});
             return;
         }
-
         res.status(200).json({message: 'Contents delivered successfully',contents: response});
         return;
     } catch (error) {

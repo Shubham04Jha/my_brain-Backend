@@ -11,7 +11,9 @@ interface Tokenpayload extends JwtPayload{
 export const userAuthMiddleware = ((req: Request, res: Response, next: NextFunction): void=>{
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        res.status(401).json({ message: 'Authorization token missing or malformed' });
+        res.status(401).json({ message: 'Authorization token missing or malformed', 
+            received: authHeader
+        });
         return;
     }
     const token: string = authHeader.split(' ')[1];
@@ -22,7 +24,8 @@ export const userAuthMiddleware = ((req: Request, res: Response, next: NextFunct
             return;
         }
         const decodedPayload = decoded as Tokenpayload;
-        req.body.userId = decodedPayload.userId;
+        //@ts-ignore
+        req.userId = decodedPayload.userId;
     } catch (error: unknown) {
         if (error instanceof JsonWebTokenError) { 
             console.log(error.message);
