@@ -1,14 +1,14 @@
 
 import express from 'express';
-import type { Request,Response } from 'express';
-import {port, JWT_SECRET} from './config.ts';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
-import {userModel, contentModel, tagModel } from './db/schema.ts';
-import { userAuthMiddleware } from './middleware/userAuth.ts';
 import { MongooseError } from 'mongoose';
 import {MongoServerError} from 'mongodb';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
+import type { Request,Response } from 'express';
 
+import {port, JWT_SECRET} from './config.ts';
+import {userModel, contentModel, tagModel } from './db/schema.ts';
+import { userAuthMiddleware } from './middleware/userAuth.ts';
 
 const app = express();
 
@@ -92,7 +92,7 @@ app.post('/api/v1/signin',async(req, res): Promise<void> =>{
     }
 })
 
-app.post('/api/v1/contents',userAuthMiddleware, async(req,res): Promise<void> =>{
+app.post('/api/v1/content',userAuthMiddleware, async(req,res): Promise<void> =>{
     //@ts-ignore
     const userId = req.userId;
     const {title,link,tags,thoughts,type} = req.body;
@@ -111,7 +111,7 @@ app.post('/api/v1/contents',userAuthMiddleware, async(req,res): Promise<void> =>
     }
 })
 
-app.get('/api/v1/contents',userAuthMiddleware, async(req,res): Promise<void> =>{
+app.get('/api/v1/content',userAuthMiddleware, async(req,res): Promise<void> =>{
     //@ts-ignore
     const userId = req.userId;
     try {
@@ -146,6 +146,30 @@ app.post('/api/v1/tag',userAuthMiddleware,async(req,res): Promise<void>=>{
         errorHandler(req,res,error,"creating tag");
     }
 })
+
+app.delete('/api/v1/content',userAuthMiddleware, async(req,res): Promise<void>=>{
+    //@ts-ignore
+    const userId = req.userId;
+    const {contentId} = req.body;
+    try {
+        const response = await contentModel.findById(contentId);
+        if(!response){
+            res.status(404).json({message:'User does not exists in db. Error in deleting the content!'});
+            return;
+        }
+        if(response.userId !=userId){
+            res.status(403).json({message:'Trying to delete a doc you don’t own'});
+            return;
+        }
+        await contentModel.findByIdAndDelete(contentId);
+        res.status(200).json({message:'Content Deleted'});
+        return;
+    } catch (error) {
+        errorHandler(req,res,error,'deleting content');
+    }
+})
+
+
 
 app.get('/',(req, res)=>{
     res.send('hello from ts');
