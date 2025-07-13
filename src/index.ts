@@ -109,6 +109,30 @@ app.get('/api/v1/content',userAuthMiddleware, async(req,res): Promise<void> =>{
     }
 })
 
+app.put('/api/v1/content/ispublic/:contentId',userAuthMiddleware, async(req,res): Promise<void> =>{
+    //@ts-ignore
+    const userId = req.userId;
+    const contentId = req.params.contentId;
+    const isPublic = req.body.isPublic;
+    try {
+        const content = await contentModel.findById(contentId);
+        if(!content){
+            res.status(404).json({message:'Content not found'});
+            return;
+        }
+        if(content.userId!=userId){
+            res.status(403).json({message:'Updating content you don\'t own'});
+            return;
+        }
+        content.isPublic = isPublic;
+        content.save();
+        res.status(200).json({message:'update successful'});
+        return;
+    } catch (error) {
+        errorHandler(error,'Updated the ispublic value successfully');
+    }
+})
+
 app.post('/api/v1/tag',userAuthMiddleware,async(req,res): Promise<void>=>{
     //@ts-ignore
     const userId = req.userId;
