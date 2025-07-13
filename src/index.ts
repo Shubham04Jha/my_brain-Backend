@@ -142,7 +142,12 @@ app.delete('/api/v1/content',userAuthMiddleware, async(req,res): Promise<void>=>
     }
 })
 
-
+app.post('/api/v1/share',userAuthMiddleware,(req,res)=>{
+    //@ts-ignore
+    const id = req.id;
+    const share = req.body.share;
+    
+})
 
 app.get('/',(req, res)=>{
     res.send('hello from ts');

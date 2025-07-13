@@ -2,7 +2,7 @@
 
 import mongoose from "mongoose"
 import { DB_Url } from "../../config.ts"
-import { contentModel } from "../schema.ts";
+import { contentModel, userModel } from "../schema.ts";
 import { errorHandler } from "../../utils/errorHandler.ts";
 
 mongoose.connect(DB_Url).then(()=>{
@@ -28,14 +28,23 @@ const isPublicMigration = async(): Promise<void> =>{
         errorHandler(error,"isPublicMigration");
     }
 }
-const migration = async(): Promise<void> =>{
+const createdAtMigration = async(): Promise<void> =>{
     try{
         contentModel.updateMany(
             {createdAt: {$exists: false}},
             {$set: {createdAt: Date.now()}}
         ).exec();
     }catch(error){
-        errorHandler(error,"migration");
+        errorHandler(error,"migration to add createAtField");
+    }
+}
+
+const migration = async(): Promise<void> =>{
+    try {
+        await userModel.updateMany({publicShare: {$exists: false}},
+            { $set:{publicShare: false}});
+    } catch (error) {
+        errorHandler(error,'migration for publicShare link');
     }
 }
 migration();
