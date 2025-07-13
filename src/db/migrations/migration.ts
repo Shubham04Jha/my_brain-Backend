@@ -39,12 +39,16 @@ const createdAtMigration = async(): Promise<void> =>{
     }
 }
 
-const migration = async(): Promise<void> =>{
+const publicShareMigration = async(): Promise<void> =>{
     try {
         await userModel.updateMany({publicShare: {$exists: false}},
             { $set:{publicShare: false}});
     } catch (error) {
         errorHandler(error,'migration for publicShare link');
     }
+}
+
+const migration = async(): Promise<void> =>{
+    return;
 }
 migration();
