@@ -3,6 +3,7 @@ import type { NextFunction, Request,Response } from "express";
 import { JWT_SECRET } from "../config.ts";
 import jwt from "jsonwebtoken";
 import type {  JwtPayload } from "jsonwebtoken";
+import mongoose from "mongoose";
 
 const {  JsonWebTokenError } = jwt;
 interface Tokenpayload extends JwtPayload{
@@ -24,8 +25,7 @@ export const userAuthMiddleware = ((req: Request, res: Response, next: NextFunct
             return;
         }
         const decodedPayload = decoded as Tokenpayload;
-        //@ts-ignore
-        req.userId = decodedPayload.userId;
+        req.userId = new mongoose.Types.ObjectId(decodedPayload.userId);
     } catch (error: unknown) {
         if (error instanceof JsonWebTokenError) { 
             console.log(error.message);

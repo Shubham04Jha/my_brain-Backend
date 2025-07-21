@@ -1,5 +1,5 @@
 
-import express from 'express';
+import express, {Request,Response} from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 
@@ -8,11 +8,13 @@ import {userModel, contentModel, tagModel } from './db/schema.ts';
 import { userAuthMiddleware } from './middleware/userAuth.ts';
 import { errorHandler } from './utils/errorHandler.ts';
 
+
+
 const app = express();
 
 app.use(express.json());
 
-app.post('/api/v1/signup',async (req, res):Promise<void>=>{
+app.post('/api/v1/signup',async (req: Request, res: Response):Promise<void>=>{
     const {username,password} = req.body;
     if(!username||!password){
         res.status(411).json({message:'Error in inputs'});
@@ -33,7 +35,7 @@ app.post('/api/v1/signup',async (req, res):Promise<void>=>{
     }
 })
 
-app.post('/api/v1/signin',async(req, res): Promise<void> =>{
+app.post('/api/v1/signin',async(req: Request, res: Response): Promise<void> =>{
     const {username,password} = req.body;
     if(!username||!password){
         res.status(411).json({message:'username and password is required'});
@@ -65,8 +67,8 @@ app.post('/api/v1/signin',async(req, res): Promise<void> =>{
     }
 })
 
-app.post('/api/v1/content',userAuthMiddleware, async(req,res): Promise<void> =>{
-    //@ts-ignore
+app.post('/api/v1/content',userAuthMiddleware, async(req: Request,res: Response): Promise<void> =>{
+    
     const userId = req.userId;
     const {title,link,tags,thoughts,type,isPublic} = req.body;
     try {
@@ -86,8 +88,8 @@ app.post('/api/v1/content',userAuthMiddleware, async(req,res): Promise<void> =>{
     }
 })
 
-app.get('/api/v1/content',userAuthMiddleware, async(req,res): Promise<void> =>{
-    //@ts-ignore
+app.get('/api/v1/content',userAuthMiddleware, async(req: Request,res: Response): Promise<void> =>{
+    
     const userId = req.userId;
     try {
         const response = await contentModel.find({userId}).populate(
@@ -109,8 +111,8 @@ app.get('/api/v1/content',userAuthMiddleware, async(req,res): Promise<void> =>{
     }
 })
 
-app.put('/api/v1/content/ispublic/:contentId',userAuthMiddleware, async(req,res): Promise<void> =>{
-    //@ts-ignore
+app.put('/api/v1/content/ispublic/:contentId',userAuthMiddleware, async(req: Request,res: Response ):Promise<void> =>{
+    
     const userId = req.userId;
     const contentId = req.params.contentId;
     const isPublic = req.body.isPublic;
@@ -133,8 +135,8 @@ app.put('/api/v1/content/ispublic/:contentId',userAuthMiddleware, async(req,res)
     }
 })
 
-app.post('/api/v1/tag',userAuthMiddleware,async(req,res): Promise<void>=>{
-    //@ts-ignore
+app.post('/api/v1/tag',userAuthMiddleware,async(req: Request,res: Response ):Promise<void>=>{
+    
     const userId = req.userId;
     const tag = req.body.tag;
     try {
@@ -146,8 +148,8 @@ app.post('/api/v1/tag',userAuthMiddleware,async(req,res): Promise<void>=>{
     }
 })
 
-app.delete('/api/v1/content',userAuthMiddleware, async(req,res): Promise<void>=>{
-    //@ts-ignore
+app.delete('/api/v1/content',userAuthMiddleware, async(req: Request,res: Response ): Promise<void>=>{
+    
     const userId = req.userId;
     const {contentId} = req.body;
     try {
@@ -168,8 +170,8 @@ app.delete('/api/v1/content',userAuthMiddleware, async(req,res): Promise<void>=>
     }
 })
 
-app.post('/api/v1/share',userAuthMiddleware, async (req,res): Promise<void>=>{
-    //@ts-ignore
+app.post('/api/v1/share',userAuthMiddleware, async (req: Request,res: Response ):Promise<void>=>{
+    
     const userId = req.userId;
     const share = req.body.share;
     try {
@@ -181,7 +183,7 @@ app.post('/api/v1/share',userAuthMiddleware, async (req,res): Promise<void>=>{
     }
 })
 
-app.get('/api/v1/share/:username',async (req, res): Promise<void>=>{
+app.get('/api/v1/share/:username',async (req: Request, res: Response): Promise<void>=>{
     const username = req.params.username;
     try {
         const response = await userModel.findOne({username});
