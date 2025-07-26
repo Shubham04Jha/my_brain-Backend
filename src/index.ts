@@ -1,5 +1,5 @@
 
-import express, {Request,Response} from 'express';
+import express from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 
@@ -8,13 +8,21 @@ import {userModel, contentModel, tagModel } from './db/schema.ts';
 import { userAuthMiddleware } from './middleware/userAuth.ts';
 import { errorHandler } from './utils/errorHandler.ts';
 
+import type {Request,Response} from "express";
 
+import cors from "cors";
 
 const app = express();
+
+app.use(cors());
 
 app.use(express.json());
 
 app.post('/api/v1/signup',async (req: Request, res: Response):Promise<void>=>{
+    if(!req.body){
+        res.status(403).json({message:'Body not found, Try adding headers to the request.'});
+        return;
+    }
     const {username,password} = req.body;
     if(!username||!password){
         res.status(411).json({message:'Error in inputs'});
@@ -203,6 +211,11 @@ app.get('/api/v1/share/:username',async (req: Request, res: Response): Promise<v
     } catch (error) {
         errorHandler(error,'accessing sharedBrain');
     }
+})
+
+app.get('/api/v1/isAuthenticated',userAuthMiddleware,(req: Request,res: Response): void=>{
+    res.status(200).json({authenticated: true});
+    return;
 })
 
 app.listen(port,()=>{

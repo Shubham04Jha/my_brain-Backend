@@ -7,13 +7,14 @@
     "build": "tsc -b",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
-    "migrate":"ts-node src/db/migrations/migration.ts"
+    "migrate": "ts-node src/db/migrations/migration.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@types/cors": "^2.8.19",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.0.1",
