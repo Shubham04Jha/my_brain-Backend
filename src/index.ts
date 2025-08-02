@@ -130,7 +130,7 @@ app.put('/api/v1/content/ispublic/:contentId',userAuthMiddleware, async(req: Req
             res.status(404).json({message:'Content not found'});
             return;
         }
-        if(content.userId!=userId){
+        if(!content.userId.equals(userId)){
             res.status(403).json({message:'Updating content you don\'t own'});
             return;
         }
@@ -166,7 +166,7 @@ app.delete('/api/v1/content',userAuthMiddleware, async(req: Request,res: Respons
             res.status(404).json({message:'User does not exists in db. Error in deleting the content!'});
             return;
         }
-        if(response.userId !=userId){
+        if(!response.userId.equals(userId)){
             res.status(403).json({message:'Trying to delete a doc you don’t own'});
             return;
         }
@@ -213,9 +213,19 @@ app.get('/api/v1/share/:username',async (req: Request, res: Response): Promise<v
     }
 })
 
-app.get('/api/v1/isAuthenticated',userAuthMiddleware,(req: Request,res: Response): void=>{
-    res.status(200).json({authenticated: true});
-    return;
+app.get('/api/v1/isAuthenticated',userAuthMiddleware, async (req: Request,res: Response): Promise<void>=>{
+    try {
+        const response = await userModel.findById(req.userId);
+        if(!response){
+            res.status(404).json({authenticated: false,message:'User Not Found!'});
+            return;
+        }
+        const username = response.username;
+        res.status(200).json({authenticated: true,username: username});
+        return;
+    } catch (error) {
+        errorHandler(error,'searching for username');
+    }
 })
 
 app.listen(port,()=>{
