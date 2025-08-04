@@ -48,7 +48,17 @@ const publicShareMigration = async(): Promise<void> =>{
     }
 }
 
-const migration = async(): Promise<void> =>{
-    return;
+const SharedBrainFieldmigration = async(): Promise<void> =>{
+    try{
+        await userModel.updateMany({sharedBrains: {$exists: true}},
+            {$set: {sharedBrains: []}}
+        );
+        console.log('migration complete');
+    }catch(error){
+        errorHandler(error,'migrating for addition of sharedBrains');
+    }
+}
+const migration = ()=>{
+    console.log('empty migration');
 }
 migration();

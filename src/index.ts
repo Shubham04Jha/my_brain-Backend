@@ -228,6 +228,43 @@ app.get('/api/v1/isAuthenticated',userAuthMiddleware, async (req: Request,res: R
     }
 })
 
+app.get('/api/v1/sharedBrains',userAuthMiddleware, async (req: Request,res: Response): Promise<void> =>{
+    try {
+        const user = await userModel.findById(req.userId);
+        if(!user){
+            res.status(404).json({message:'User not found'});
+            return;
+        }
+        res.status(200).json({message:'Successful!',sharedBrains: user.sharedBrains})
+    } catch (error) {
+        errorHandler(error,'searching Shared Brains');
+    }
+})
+
+app.post('/api/v1/sharedBrains',userAuthMiddleware, async (req: Request, res: Response): Promise<void> =>{
+    
+    try {
+        const {sharedBrain} = req.body;
+        if(!sharedBrain){
+            res.status(403).json({message:'sharedBrain cannot be empty'});
+            return;
+        }
+        const user = await userModel.findById(req.userId);
+        if(!user){
+            res.status(404).json({message:'User not found'});
+            return;
+        }
+        if(user.sharedBrains.includes(sharedBrain)){
+            res.status(200).json({message:'Brain Already existed'});
+        }
+        user.sharedBrains.push(sharedBrain);
+        user.save();
+        res.status(200).json({message:'Successfully added the brain!'})
+    } catch (error) {
+        errorHandler(error,'searching Shared Brains');
+    }
+})
+
 app.listen(port,()=>{
     console.log(`server is listening on port: ${port}`);
 })
