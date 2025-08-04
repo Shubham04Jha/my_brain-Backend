@@ -271,6 +271,16 @@ app.post('/api/v1/sharedBrains',userAuthMiddleware, async (req: Request, res: Re
     }
 })
 
+app.get('/api/v1/checkPublicStatus/:username', async(req: Request, res: Response): Promise<void>=>{
+    try {
+        const user = await userModel.findOne({username:req.params.username});
+        res.status(200).json({publicShare:user?user.publicShare:false});
+    } catch (error) {
+        errorHandler(error,'checking public status');
+        res.status(500).json({message:'Server Error'});
+    }
+})
+
 app.listen(port,()=>{
     console.log(`server is listening on port: ${port}`);
 })
