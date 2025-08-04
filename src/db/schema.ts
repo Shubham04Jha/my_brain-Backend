@@ -7,14 +7,7 @@ const userSchema = new Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   publicShare: {type: Boolean, required: true, default: false},
-  sharedBrains: [{type: String, ref: 'user', 
-    validate: async function(value: String){
-      const user = await userModel.find({username:value});
-      if(!user){
-        throw new Error('User does not exist');
-      }
-    } 
-  }],
+  sharedBrains: [{type: String}],
 });
 
 export const userModel = model('user',userSchema,'users');

@@ -254,8 +254,14 @@ app.post('/api/v1/sharedBrains',userAuthMiddleware, async (req: Request, res: Re
             res.status(404).json({message:'User not found'});
             return;
         }
+        const otherUser = await userModel.findOne({username:sharedBrain});
+        if(!otherUser){
+            res.status(404).json({message:'Brain does not exists'});
+            return;
+        }
         if(user.sharedBrains.includes(sharedBrain)){
             res.status(200).json({message:'Brain Already existed'});
+            return;
         }
         user.sharedBrains.push(sharedBrain);
         user.save();
