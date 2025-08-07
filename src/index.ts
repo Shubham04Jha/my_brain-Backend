@@ -281,6 +281,50 @@ app.get('/api/v1/checkPublicStatus/:username', async(req: Request, res: Response
     }
 })
 
+app.get('/api/v1/content/:contentId',userAuthMiddleware,async(req: Request,res: Response): Promise<void> =>{
+    const userId = req.userId;
+    const {contentId} = req.params;
+    try {
+        if(!contentId){
+            res.status(403).json({message: 'contentId missing'});
+            return;
+        }
+        const content = await contentModel.findById(contentId).populate({path:'userId',select:'username'});
+        if(!content){
+            res.status(404).json({message: 'content does not exists'});
+            return;
+        }
+        const contentOwnerId = content.userId._id;
+        if(!contentOwnerId.equals(userId) ){
+            res.status(403).json({message:'Accessing content you dont own'});
+            return;
+        }
+        res.status(200).json({content});
+    } catch (error) {
+        errorHandler(error,'getting shared content',req,res);
+        return;
+    }
+})
+
+app.get('/api/v1/shareContent/:contentId',async(req: Request,res: Response): Promise<void> =>{
+    const {contentId} = req.params;
+    try {
+        if(!contentId){
+            res.status(403).json({message: 'contentId missing'});
+            return;
+        }
+        const content = await contentModel.findById(contentId).populate({path:'userId',select:'username'});
+        if(!content?.isPublic){
+            res.status(404).json({message: 'content does not exists or is not public'});
+            return;
+        }
+        res.status(200).json({content});
+    } catch (error) {
+        errorHandler(error,'getting shared content',req,res);
+        return;
+    }
+})
+
 app.listen(port,()=>{
     console.log(`server is listening on port: ${port}`);
 })
