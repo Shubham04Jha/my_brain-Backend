@@ -306,6 +306,30 @@ app.get('/api/v1/content/:contentId',userAuthMiddleware,async(req: Request,res: 
     }
 })
 
+app.put('/api/v1/content/:contentId',userAuthMiddleware,async (req: Request,res: Response): Promise<void> =>{
+    const userId = req.userId;
+    const contentId = req.params.contentId;
+    const content = await contentModel.findById(contentId);
+    const {title,thoughts} = req.body;
+    if(!title||!thoughts){
+        res.status(403).json({message:'title and thoughts required'});
+        return;
+    }
+    if(!content){
+        res.status(404).json({message: 'Content not found'});
+        return;
+    }
+    if(!content.userId.equals(userId)){
+        res.status(409).json({message: 'Editing content you don\'t own'});
+        return;
+    }
+    content.title=title;
+    content.thoughts =thoughts;
+    content.save();
+    res.status(200).json({message: 'Success'});
+    return;
+})
+
 app.get('/api/v1/shareContent/:contentId',async(req: Request,res: Response): Promise<void> =>{
     const {contentId} = req.params;
     try {
@@ -324,6 +348,7 @@ app.get('/api/v1/shareContent/:contentId',async(req: Request,res: Response): Pro
         return;
     }
 })
+
 
 app.listen(port,()=>{
     console.log(`server is listening on port: ${port}`);
