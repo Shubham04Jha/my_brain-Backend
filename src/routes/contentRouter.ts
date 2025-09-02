@@ -32,7 +32,7 @@ router.get('/',userAuthMiddleware, async(req: Request,res: Response): Promise<vo
     }
 })
 
-router.get('detail/:contentId',userAuthMiddleware,async(req: Request,res: Response): Promise<void> =>{
+router.get('/detail/:contentId',userAuthMiddleware,async(req: Request,res: Response): Promise<void> =>{
     const userId = req.userId;
     const {contentId} = req.params;
     try {
