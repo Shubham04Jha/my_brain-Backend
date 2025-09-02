@@ -73,4 +73,26 @@ router.post('/vectorSearch',userAuthMiddleware,async (req,res)=>{
     } 
 })
 
+router.get('/:query',userAuthMiddleware, async (req,res)=>{
+    const query = (req.params.query || "").trim();
+    const pattern = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    try {
+        const results = await contentModel.find({
+            userId: req.userId,
+            $or:[
+                { title: {$regex: pattern, $options:"i"} },
+                { thoughts:{$regex: pattern, $options:"i"} } 
+            ]
+        })
+        .select('-embedding')
+        .populate([
+            { path: 'userId', select: 'username' },
+            { path: 'tags', populate: { path: 'tag', select: 'tag' } }
+        ]);
+        res.status(200).json({results});
+    } catch (error) {
+        errorHandler(error,"regular search",req,res);
+    }
+})
+
 export default router;
