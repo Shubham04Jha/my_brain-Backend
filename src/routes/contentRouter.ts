@@ -2,30 +2,12 @@ import { Router } from "express";
 import {userModel, contentModel, tagModel } from '../db/schema.ts';
 import { userAuthMiddleware } from '../middleware/userAuth.ts';
 import { errorHandler } from '../utils/errorHandler.ts';
-
 import type {Request,Response} from "express";
+import searchRouter from "./searchRouter.ts";
 
 const router = Router();
-router.post('/',userAuthMiddleware, async(req: Request,res: Response): Promise<void> =>{
-    
-    const userId = req.userId;
-    const {title,link,tags,thoughts,type,isPublic} = req.body;
-    try {
-        const response = await contentModel.create({
-            title,
-            type,
-            link,
-            thoughts, 
-            userId,
-            ...isPublic&&{isPublic},
-            ...tags&&{tags}
-        });
-        res.status(200).json({message: 'Contents uploaded successfully',content: response});
-        return;
-    } catch (error) {
-        errorHandler(error,"posting contents",req,res);
-    }
-})
+
+router.use('/search',searchRouter);
 
 router.get('/',userAuthMiddleware, async(req: Request,res: Response): Promise<void> =>{
     
@@ -50,7 +32,6 @@ router.get('/',userAuthMiddleware, async(req: Request,res: Response): Promise<vo
     }
 })
 
-//careful here ...
 router.get('detail/:contentId',userAuthMiddleware,async(req: Request,res: Response): Promise<void> =>{
     const userId = req.userId;
     const {contentId} = req.params;
@@ -73,6 +54,28 @@ router.get('detail/:contentId',userAuthMiddleware,async(req: Request,res: Respon
     } catch (error) {
         errorHandler(error,'getting shared content',req,res);
         return;
+    }
+})
+
+router.post('/',userAuthMiddleware, async(req: Request,res: Response): Promise<void> =>{
+    const userId = req.userId;
+    const {title,link,tags,thoughts,type,isPublic} = req.body;
+    try {
+        const response = await contentModel.create({
+            title,
+            type,
+            link,
+            thoughts, 
+            userId,
+            ...isPublic&&{isPublic},
+            ...tags&&{tags}
+        });
+        res.status(200).json({message: 'Contents uploaded successfully',
+            content: (({embedding,...rest})=>rest)(response.toObject()) //IIFE Immediately Invoked Function Expression
+        });
+        return;
+    } catch (error) {
+        errorHandler(error,"posting contents",req,res);
     }
 })
 
@@ -122,7 +125,6 @@ router.delete('/',userAuthMiddleware, async(req: Request,res: Response ): Promis
     }
 })
 
-
 router.put('/ispublic/:contentId',userAuthMiddleware, async(req: Request,res: Response ):Promise<void> =>{
     
     const userId = req.userId;
@@ -147,7 +149,7 @@ router.put('/ispublic/:contentId',userAuthMiddleware, async(req: Request,res: Re
     }
 })
 
-// this api changed
+
 router.post('/tag',userAuthMiddleware,async(req: Request,res: Response ):Promise<void>=>{
     
     const userId = req.userId;
@@ -162,7 +164,7 @@ router.post('/tag',userAuthMiddleware,async(req: Request,res: Response ):Promise
 })
 
 
-// this api changed
+
 router.get('/share/:username',async (req: Request, res: Response): Promise<void>=>{
     const username = req.params.username;
     try {

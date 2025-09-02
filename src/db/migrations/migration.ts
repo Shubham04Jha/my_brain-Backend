@@ -4,6 +4,7 @@ import mongoose from "mongoose"
 import { DB_Url } from "../../config.ts"
 import { contentModel, userModel } from "../schema.ts";
 import { errorHandler } from "../../utils/errorHandler.ts";
+import { getEmbedding } from '../../utils/getEmbeddings.ts';
 
 mongoose.connect(DB_Url).then(()=>{
     console.log('connected to db for migration');
@@ -58,6 +59,27 @@ const SharedBrainFieldmigration = async(): Promise<void> =>{
         errorHandler(error,'migrating for addition of sharedBrains');
     }
 }
+
+const migrationToEmbeddings = async(): Promise<void> =>{
+    try {
+        const contents = await contentModel.find({ embedding: { $exists: false } });
+        console.log("Total documents found: "+contents.length);
+        let i = 1
+        for(const content of contents){
+            const combined = content.title+" "+content.thoughts||"";
+            content.embedding = await getEmbedding(combined) || [-1]; 
+            await new Promise(r=>setTimeout(r,20000));
+            await content.save();
+            console.log("contents transformed: "+ i++);
+        }
+    } catch (error) {
+        errorHandler(error," migration");
+    } finally{
+        console.log("Migration completed.");
+        await mongoose.disconnect();
+    }
+}
+
 const migration = ()=>{
     console.log('empty migration');
 }

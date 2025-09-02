@@ -8,3 +8,4 @@ export const DB_Url: string = `mongodb+srv://${process.env.DB_USERNAME}:${proces
 
 export const JWT_SECRET: string = process.env.JWT_SECRET_KEY || 'jwtSecretAlt';
 
+export const VOYAGE_API_KEY  = process.env.VOYAGE_API_KEY;
